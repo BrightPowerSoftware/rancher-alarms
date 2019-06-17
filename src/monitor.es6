@@ -176,7 +176,8 @@ export default class ServiceStateMonitor {
     this.service = await this._rancher.getService(this.service.id);
     trace(`poll ${this.name}`);
 
-    if (this.service.state === 'updating-active') {
+    const degradedStates = ['updating-active', 'finishing-upgrade']
+    if (degradedStates.includes(this.service.state)) {
       newState = 'degraded';
     } else if (this.service.state === 'active') {
       if (this.service.launchConfig && this.service.launchConfig.healthCheck) {
@@ -198,40 +199,11 @@ export default class ServiceStateMonitor {
   }
 
   _withoutSidekicks(containers) {
-    return containers.filter(({name}) => name.split('_').length <= 3 );
-    //const byDeployUnit = {};
-    //let results = [];
-    //
-    //for (let container of containers) {
-    //  let unit;
-    //  if (unit = container.labels['io.rancher.service.deployment.unit']) {
-    //    if (!byDeployUnit[unit]) {
-    //      byDeployUnit[unit] = [container]
-    //    } else {
-    //      byDeployUnit[unit].push(container);
-    //    }
-    //  }
-    //}
-    //
-    //for (let [unitId, unitContainers] of pairs(byDeployUnit)) {
-    //  const sidekicks = _(unitContainers)
-    //    .map((c) => c.labels['io.rancher.sidekicks'] && c.labels['io.rancher.sidekicks'].split(','))
-    //    .compact()
-    //    .flatten()
-    //    .uniq();
-    //
-    //  results = results.concat(unitContainers.filter(({name}) => {
-    //    const re = new RegExp(`${this.stackName}_${this.service.name}_(.*)_\\d`);
-    //    const match = name.match(re);
-    //    if (!match) {
-    //      error(`failed to extract container_name from ${name} with regex ${re}`)
-    //    }
-    //    const serviceName = match && match[1];
-    //    info(`serviceName ${serviceName} extracted from ${name}`);
-    //    return sidekicks.indexOf(serviceName) == -1;
-    //  }));
-    //}
-    //return results;
+    const sidekicks = containers
+      .map(c => c.labels['io.rancher.sidekicks'] && c.labels['io.rancher.sidekicks'].split(','))
+      .flat()
+      .filter(Boolean);
+    return containers.filter(c => !sidekicks.some((sidekick)=>c.name.includes(sidekick)));
   }
 
   stop() {
