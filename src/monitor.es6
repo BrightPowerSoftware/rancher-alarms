@@ -176,8 +176,7 @@ export default class ServiceStateMonitor {
     this.service = await this._rancher.getService(this.service.id);
     trace(`poll ${this.name}`);
 
-    const degradedStates = ['updating-active', 'finishing-upgrade']
-    if (degradedStates.includes(this.service.state)) {
+    if (['updating-active', 'finishing-upgrade'].indexOf(this.service.state) !== -1) {
       newState = 'degraded';
     } else if (this.service.state === 'active') {
       if (this.service.launchConfig && this.service.launchConfig.healthCheck) {
@@ -201,8 +200,7 @@ export default class ServiceStateMonitor {
   _withoutSidekicks(containers) {
     const sidekicks = containers
       .map(c => c.labels['io.rancher.sidekicks'] && c.labels['io.rancher.sidekicks'].split(','))
-      .flat()
-      .filter(Boolean);
+      .flat().filter(Boolean);
     return containers.filter(c => !sidekicks.some((sidekick)=>c.name.includes(sidekick)));
   }
 

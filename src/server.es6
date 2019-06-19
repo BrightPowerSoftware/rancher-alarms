@@ -120,10 +120,11 @@ import assert from 'assert';
 
   /**
    * Should we monitor this service?
+   * Which states are being monitored. 
    * @param service
      */
   function runningServicePredicate(service) {
-    return ['active', 'upgraded', 'upgrading', 'updating-active'].indexOf(service.state) !== -1;
+    return ['active', 'upgraded', 'upgrading', 'updating-active', 'finishing-upgrade'].indexOf(service.state) !== -1;
   }
 
   function globalServiceFilterPredicate(service) {
