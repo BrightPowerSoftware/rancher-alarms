@@ -2,7 +2,7 @@
 
 set -e
 
-repo=ndelitski
+repo=docker-registry.brightpowerinc.com
 
 image=rancher-alarms
 
